@@ -1,0 +1,97 @@
+# MoeZ 伪静态（Apache + mod_rewrite）
+# 说明：静态 URL（/fenlei/1.html、/1.html 等，含旧的 /post/xxx、/archives/1.html）
+#       统一交给 index.php 解析，切换 URL 样式无需修改本文件。
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# 已存在的文件 / 目录直接访问（含 admin、uploads、templates）
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 静态资源缺失时不必走 PHP
+RewriteCond %{REQUEST_URI} \.(ico|png|jpe?g|gif|webp|svg|css|js|woff2?|ttf|map)$ [NC]
+RewriteRule ^ - [L]
+
+# 其余请求全部交给入口文件
+RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+<IfModule mod_dir.c>
+DirectoryIndex index.php index.html
+</IfModule>
+
+# 禁止访问敏感文件
+<FilesMatch "^(config\.php|config\.sample\.php|install\.lock|\.htaccess|\.user\.ini|_ping_tmp\.php|diag\.php|selfcheck\.php)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# 存量附件改名工具：仅允许命令行运行，禁止 Web 直接访问
+<Files "strip-upload-timestamps.php">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</Files>
+
+# ============================================================
+# 1.9.0 · 性能配置（可选，Nginx 请用 docs/nginx-performance.conf 与根目录 nginx.conf）
+# 主机不支持对应模块时 <IfModule> 会被自动忽略，不影响访问。
+# ============================================================
+
+# 缓存目录（页面缓存文件）禁止外部直接访问
+<IfModule mod_rewrite.c>
+  RewriteRule ^cache/ - [F,L]
+</IfModule>
+
+# ---------- 输出压缩：HTML / CSS / JS / JSON / SVG ----------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
+  AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+  AddOutputFilterByType DEFLATE application/json application/xml application/rss+xml
+  AddOutputFilterByType DEFLATE image/svg+xml
+  SetEnvIfNoCase Request_URI \.(?:gif|jpe?g|png|webp|avif|zip|gz|rar|7z|mp4|webm|mp3|m4a|woff2?)$ no-gzip dont-vary
+</IfModule>
+
+# ---------- 静态资源浏览器缓存 ----------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpeg          "access plus 1 year"
+  ExpiresByType image/png           "access plus 1 year"
+  ExpiresByType image/gif           "access plus 1 year"
+  ExpiresByType image/webp          "access plus 1 year"
+  ExpiresByType image/avif          "access plus 1 year"
+  ExpiresByType image/svg+xml       "access plus 1 month"
+  ExpiresByType font/woff           "access plus 1 year"
+  ExpiresByType font/woff2          "access plus 1 year"
+  ExpiresByType video/mp4           "access plus 1 month"
+  ExpiresByType audio/mpeg          "access plus 1 month"
+  ExpiresByType text/css            "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType text/javascript     "access plus 1 month"
+  ExpiresByType application/xml     "access plus 1 hour"
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|png|jpe?g|gif|webp|avif|svg|woff2?|ttf|mp4|webm|mp3)$">
+    Header unset ETag
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+  # 2.1.14：主题 CSS/JS 全部带 ?v=版本号，可安全长缓存，回访直接命中本地缓存、不再发请求
+  <FilesMatch "\.(css|js)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  Header set X-Content-Type-Options "nosniff"
+</IfModule>
+FileETag None
+

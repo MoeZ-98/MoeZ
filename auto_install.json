@@ -1,0 +1,12 @@
+{
+  "php_ext": "pdo_mysql,mbstring,gd,zip,fileinfo",
+  "chmod": ["uploads", "cache", "content", "templates"],
+  "success_url": "/index.php",
+  "php_versions": "72,73,74,80,81,82,83",
+  "db_config": "install.php",
+  "admin_username": "******",
+  "admin_password": "******",
+  "run_path": "/",
+  "remove_file": [],
+  "enable_functions": []
+}

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoeZ 开发文档 · v2.2.29</title>
+<style>
+:root{--pink:#ff7eb3;--violet:#a18cd1;--bg:#fff7fb;--card:#fff;--text:#4a3b52;--muted:#9b8aa8;--line:#f1e4f0;--code:#2d2438;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.75;display:flex;min-height:100vh}
+/* —— 侧栏 —— */
+aside{width:270px;flex:0 0 270px;background:#fff;border-right:1px solid var(--line);position:sticky;top:0;height:100vh;overflow-y:auto;padding:24px 0}
+aside h1{font-size:17px;padding:0 22px 6px;background:linear-gradient(90deg,var(--pink),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+aside .meta{font-size:11.5px;color:var(--muted);padding:0 22px 14px;border-bottom:1px solid var(--line)}
+aside input{margin:14px 22px 10px;width:calc(100% - 44px);padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;outline:none;font-size:13px}
+aside input:focus{border-color:var(--violet)}
+aside nav a{display:block;padding:7px 22px;font-size:13.5px;color:var(--text);text-decoration:none}
+aside nav a:hover{background:#faf3fc;color:var(--violet)}
+aside nav a.sub{padding-left:38px;font-size:12.5px;color:var(--muted)}
+aside nav .none{display:none!important}
+/* —— 正文 —— */
+main{flex:1;min-width:0;max-width:900px;margin:0 auto;padding:44px 34px 90px}
+main h1{font-size:30px;margin-bottom:6px}
+main .ver{color:var(--muted);font-size:13px;margin-bottom:30px}
+main h2{font-size:22px;margin:44px 0 14px;padding-top:10px;border-top:2px solid var(--line);scroll-margin-top:20px}
+main h2:first-of-type{border-top:0}
+main h3{font-size:16.5px;margin:24px 0 8px;color:var(--violet)}
+main p{margin:8px 0;font-size:14.5px}
+main ul,main ol{margin:8px 0 8px 22px;font-size:14.5px}
+main li{margin:4px 0}
+main code{background:#f6ecf7;color:#b0539c;border-radius:5px;padding:1px 6px;font-size:13px;font-family:Consolas,Menlo,monospace}
+pre{background:var(--code);color:#e9def5;border-radius:12px;padding:16px 18px;overflow-x:auto;margin:12px 0;font-size:12.8px;line-height:1.65}
+pre code{background:none;color:inherit;padding:0}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px;background:#fff;border-radius:10px;overflow:hidden}
+th,td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+th{background:#faf1fb;color:var(--violet)}
+.tip{background:#fdf1f8;border-left:4px solid var(--pink);border-radius:0 10px 10px 0;padding:10px 16px;font-size:13.5px;margin:12px 0}
+.warn{background:#fff8ec;border-left:4px solid #f0b429;border-radius:0 10px 10px 0;padding:10px 16px;font-size:13.5px;margin:12px 0}
+@media(max-width:900px){aside{position:static;width:100%;height:auto;flex:none}body{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<aside>
+  <h1>🌸 MoeZ 开发文档</h1>
+  <div class="meta">按源码 v2.2.29 实际实现编写 · 目录可搜索</div>
+  <input id="tocSearch" type="search" placeholder="搜索目录…（按 / 快速聚焦）">
+  <nav id="toc">
+    <a href="#s1">1. 简介</a>
+    <a href="#s2">2. 目录结构</a>
+    <a href="#s3">3. 数据表</a>
+    <a href="#s4">4. 核心 API</a>
+    <a href="#s5">5. 用户中心与投稿</a>
+    <a href="#s6">6. 积分商城与资源下载</a>
+    <a href="#s7">7. 授权系统</a>
+    <a href="#s8">8. 更新系统</a>
+    <a href="#s9">9. AI 看板娘（版娘挂载）</a>
+    <a href="#s10">10. 插件开发</a>
+    <a href="#s11">11. 模板开发</a>
+    <a href="#s12">12. 后台页面开发</a>
+    <a href="#s13">13. 安全规范</a>
+    <a href="#s14">14. 附录</a>
+  </nav>
+</aside>
+
+<main>
+<h1>MoeZ 开发文档</h1>
+<div class="ver">最后更新 2026-11-18 · 按源码 v2.2.29 实际实现编写 · 涵盖全部功能模块与版娘挂载</div>
+
+<h2 id="s1">1. 简介</h2>
+<p>MoeZ（萌Z，前身为 Moeblog / Moe Home）是一套<strong>原生 PHP、无框架依赖</strong>的轻量二次元博客建站系统。核心能力覆盖：</p>
+<ul>
+  <li><strong>内容</strong>：Markdown / UEditorPlus 双编辑器、分栏预览、自动保存、自动标签、阅读密码、独立页面</li>
+  <li><strong>社区</strong>：多用户角色（站长/作者/订阅者）、评论、投稿（审核流）、友链自助申请</li>
+  <li><strong>商业</strong>：积分 + 金币双货币、积分商城、金币充值（扫码/网关/人工）、授权码商品自动签发</li>
+  <li><strong>分发</strong>：HMAC 站点授权、主题/插件在线安装与更新、自动更新源端点</li>
+  <li><strong>陪伴</strong>：AI 看板娘（OpenAI 兼容接口、联网搜索、多轮记忆、配额监控）</li>
+  <li><strong>运维</strong>：在线更新与备份回滚、页面缓存、Redis 缓存、SEO 推送记录、蜘蛛管理</li>
+  <li><strong>工程</strong>：2.2.30 工程化 —— 统一上传服务、主题路径适配层、config.sample、nginx / Caddy / Docker 部署配置、面板一键部署元数据</li>
+</ul>
+<div class="tip">本文所有函数名均可在 <code>includes/</code> 对应文件中按名检索，均为源码真实存在的行为。</div>
+
+<h2 id="s2">2. 目录结构</h2>
+<h3>2.1 根目录</h3>
+<pre><code>site/
+├─ index.php            前台唯一入口：路由 / 渲染 / RSS / sitemap / 用户中心
+├─ init.php             引导：常量（MOE_VERSION）、配置、函数库、升级、会话、插件加载
+├─ config.php           安装器生成的数据库配置（含密钥，勿提交仓库）
+├─ install.php          安装向导 + 建表 SQL（settings/users/categories/posts/comments/links/spiders/spider_check）
+├─ install.lock         安装锁文件（新装包分发时须删除）
+├─ version.json         随包版本清单（离线检测兜底）
+├─ update-feed.php      ★2.2.23 自动更新源端点：扫描 update/ 目录广播最新版本
+├─ update/              ★发版目录：新版 zip 丢进来即完成"发版"（含 index.html 防列目录）
+├─ chat.php             兼容桩：正文迁至 api/chat.php，旧地址继续可用
+├─ api/                 前台接口（chat / comment / comment_upload / download / like / link / upload / ueditor-server）
+├─ pay/                 支付回调与网关
+├─ tools/               运维诊断（diag.php / selfcheck.php）
+├─ admin/               后台
+├─ includes/            核心函数库（22 个模块文件，含统一上传 upload.php / 主题路径适配 theme-assets.php）
+├─ templates/           前台模板 8 套（bingyu / default / flowersink / fomalhaut / mio / moezz / nijigen / sumi233）
+├─ assets/editor/ueditor/  UEditorPlus 发行包（2.2.22 新增）
+├─ content/             运行期用户数据（插件 hello-moe / 版娘 moez-companion / video、备份、授权档案）
+├─ uploads/             上传附件（image / video / audio / file，按月分目录，禁止执行脚本）
+├─ cache/               运行期缓存（ai / data / pc）
+├─ config.sample.php    ★2.2.30 配置模板（不含真实凭据，新包分发用）
+├─ nginx.conf / Caddyfile / docker-compose.yml   ★2.2.30 Nginx / Caddy / 容器部署配置
+├─ auto_install.json    ★2.2.30 面板一键部署元数据
+└─ SECURITY.md          ★2.2.30 安全漏洞报告指引</code></pre>
+<div class="warn"><code>config.php</code>、<code>install.lock</code>、<code>content/</code>、<code>uploads/</code>、<code>cache/</code>、<code>update/</code> 属于用户数据：打包升级、在线更新时一律不覆盖。打包新安装包时记得排除 <code>update/</code> 里已上传的程序 zip。</div>
+
+<h3>2.2 includes/ 模块一览</h3>
+<table>
+  <tr><th>文件</th><th>职责（函数量）</th></tr>
+  <tr><td>functions.php</td><td>通用工具：URL、时间、字符串、schema 自愈（80 个函数）</td></tr>
+  <tr><td>db.php</td><td>数据库抽象：q / row / rows / one / last_id（MySQL / SQLite 双驱）</td></tr>
+  <tr><td>cache.php</td><td>缓存层：2.2.27 起数据缓存只走 Redis，失败不落文件兜底、直接查库（26 个函数）</td></tr>
+  <tr><td>user.php</td><td>用户中心全家桶：登录注册、二级导航、投稿、友链、授权码、主题配色适配（85 个函数）</td></tr>
+  <tr><td>points.php</td><td>积分商城：签到、双货币、互兑、商品、订单、下载服务（66 个函数）</td></tr>
+  <tr><td>auth.php</td><td>站点授权：HMAC 签名、校验、增量应用（23 个函数）</td></tr>
+  <tr><td>system.php</td><td>在线更新：更新源校验（SSRF 防护）、拉取、应用、回滚、网盘解析（31 个函数）</td></tr>
+  <tr><td>chat.php / chat_ai.php / ai.php</td><td>看板娘：本地台词 / AI 对话 / OpenAI 兼容底层与配额（55 个函数）</td></tr>
+  <tr><td>mail.php</td><td>SMTP 邮件：moe_mail_send / moe_mail_template</td></tr>
+  <tr><td>recharge.php</td><td>金币充值：订单、通道、回调</td></tr>
+  <tr><td>plugins.php</td><td>插件系统：上传（含中文目录/GBK 转码）、钩子注册与渲染（21 个函数）</td></tr>
+  <tr><td>upload.php</td><td>★2.2.30 统一附件上传：图片/视频/音频/文档四大类、fileinfo MIME 校验（缺失自动降级）、统一命名与随机尾缀（7 个函数）</td></tr>
+  <tr><td>theme-assets.php</td><td>★2.2.30 主题路径适配层：theme_path / theme_url 与静态资产版本化（5 个函数）</td></tr>
+  <tr><td>markdown.php</td><td>Markdown 渲染 + render_content()（按 content_format 分流）</td></tr>
+  <tr><td>seo.php / push.php / spider.php / linkcheck.php / ipinfo.php / upgrade.php</td><td>SEO / 推送 / 蜘蛛 / 回链检测 / IP 归属 / 结构升级</td></tr>
+</table>
+
+<h2 id="s3">3. 数据表</h2>
+<p>带表前缀（<code>moe_table('posts')</code> 自动加前缀）。<code>pt_*</code> 五张表由积分模块首次启用时自动建表（includes/points.php），无需安装时创建。</p>
+<table>
+  <tr><th>表</th><th>用途 · 关键字段</th></tr>
+  <tr><td>settings</td><td>全站设置键值（setting() / setting_set()）</td></tr>
+  <tr><td>users</td><td>用户：账号密码、邮箱、角色（admin/author/subscriber）、积分金币余额</td></tr>
+  <tr><td>categories</td><td>分类（含站内编号 num）</td></tr>
+  <tr><td>posts</td><td>文章/页面：content_format（markdown|html）、status（published|draft|<strong>pending</strong> 投稿待审）、src（'contribute' 标记投稿）、draft_of、auto_draft、likes</td></tr>
+  <tr><td>comments</td><td>评论（归属地、点赞）</td></tr>
+  <tr><td>links</td><td>友链（含待审状态）</td></tr>
+  <tr><td>spiders / spider_check</td><td>蜘蛛记录与回查</td></tr>
+  <tr><td>pt_points</td><td>积分余额</td></tr>
+  <tr><td>pt_log</td><td>积分/金币流水</td></tr>
+  <tr><td>pt_sign</td><td>签到记录</td></tr>
+  <tr><td>pt_goods</td><td>商品：price / price_coins（-1 = 该货币不可购买）、cat（'授权码' 特殊分类）、download_url、post_id（关联文章）、status（on/off）</td></tr>
+  <tr><td>pt_orders</td><td>兑换/购买订单</td></tr>
+  <tr><td>pt_downloads</td><td>下载记录（moe_pt_download_history()）</td></tr>
+</table>
+
+<h2 id="s4">4. 核心 API</h2>
+<h3>4.1 数据库</h3>
+<pre><code>q($sql, $args = [])          // 执行写操作（INSERT/UPDATE/DELETE）
+row($sql, $args)             // 取一行（关联数组或 null）
+rows($sql, $args, $key = '') // 取多行
+one($sql, $args)             // 取单个值
+last_id()                    // 最近插入 ID
+moe_table($name)             // 加前缀表名；moe_pt_table() 同理</code></pre>
+<h3>4.2 设置与缓存</h3>
+<pre><code>setting($key, $default)  /  setting_set($key, $val)
+cache_get / cache_set / cache_del / cache_flush
+moe_remember($key, $ttl, $cb)      // 记忆化（Redis 优先回落文件）
+moe_content_changed()              // 内容变更统一失效入口（页面缓存 + 记忆化）
+moe_cache_test($host,$port,$auth,$db)  // 后台 Redis 连通性测试</code></pre>
+<h3>4.3 正文渲染与邮件</h3>
+<pre><code>render_content($content, $format)      // format=markdown 走自研渲染；html 原样输出（仅 @[login] 锁生效）
+excerpt_text($content, $len = 160)     // 摘要截取
+moe_mail_ready()                       // SMTP 是否已配置
+moe_mail_send($to, $subject, $html)    // 返回 ['ok'=>bool,'msg'=>string]
+moe_mail_template($title, $lines, $btnText, $btnUrl)  // 统一邮件模板</code></pre>
+<div class="tip">所有通知类邮件务必用 <code>moe_mail_ready()</code> 守卫：未配置 SMTP 时静默跳过，不阻塞主流程。</div>
+
+<h2 id="s5">5. 用户中心与投稿</h2>
+<h3>5.1 架构</h3>
+<p>用户中心是<strong>核心渲染</strong>而非主题模板：<code>moe_user_center_page($mode, $seg)</code>（includes/user.php）按 <code>?a=</code> 分发视图，外壳 <code>moe_uc_shell($title,$sub,$body,$u)</code> 统一输出头部、页签、样式与页脚。入口 <code>/user</code>。</p>
+<pre><code>moe_uc_tabs($u, $a, $uc)         // 一级分组导航 + 二级页签（moe_uc_tab_match() 做选中匹配）
+moe_uc_shell(...)                // 页面外壳；body 含 ctForm 时自动附加投稿 JS
+moe_uc_view_home / profile / comments / posts / author / recharge ...
+moe_uc_css_extra()               // 附加样式（含主题适配变量）</code></pre>
+<h3>5.2 主题配色自动适配（2.2.22）</h3>
+<pre><code>moe_uc_theme_vars()    // 解析当前模板 assets/style.css 的 :root（--pink/--violet/--bg/--card...）
+moe_uc_css_root()      // 输出 --uc-* 变量（color-mix 生成深浅变体）
+moe_uc_css_themify($css) // 把用户中心 CSS 里写死的 hex 替换为 var(--uc-x, 原色) —— 换主题即换配色</code></pre>
+<h3>5.3 投稿系统（2.2.22）</h3>
+<ul>
+  <li>视图 <code>moe_uc_view_contribute($u)</code>：封面/附件上传、正文编辑器<strong>跟随站长设置</strong>（<code>moe_editor_mode()</code>：markdown 或 ueditor）、勾选「同时上架资源」可定价</li>
+  <li>保存 <code>moe_uc_contribute_save($uid, $in)</code>：文章写入 <code>status='pending'</code>、<code>src='contribute'</code>；关联商品写入 <code>pt_goods.status='off'</code>（post_id 关联）；发送「投稿成功」邮件（moe_mail_ready 守卫）</li>
+  <li><strong>前台绝不渲染 pending 文章</strong> —— 投稿正文可能是未审核 HTML，render_content 的 html 分支不过滤</li>
+  <li>审核在后台文章管理：「待审核投稿」筛选 + ✅通过 / ↩退回；通过 = status → published、商品 status → on、<code>moe_uc_contribute_notify($title,$authorId,true)</code> 发「已通过」邮件；退回转草稿并发提醒。编辑待审文章改为「公开发布」同样视为通过</li>
+  <li>会员上传接口 <code>api/upload.php</code> / <code>api/ueditor-server.php</code>：登录 + X-CSRF-Token，图片 ≤10MB、附件受 upload_max_mb 限制，每人每天 40 次</li>
+</ul>
+<h3>5.4 友链自助申请（2.2.22）</h3>
+<p><code>moe_uc_view_friendlink($u)</code> + <code>moe_uc_friend_apply($name,$url,$contact)</code>：按 host 去重、<code>moe_check_backlink($url)</code> 检测回链，已加本站链接自动通过否则转待审，结果邮件通知。</p>
+<h3>5.5 我的授权码页签</h3>
+<p><code>moe_uc_auth_can($uid)</code> 判定资格（管理员 / 已购买程序或「授权码」类商品），页签按资格显示；签发写入 <code>content/updates/user-auth-codes.json</code>，主站侧同步 <code>auth-sites.json</code>。</p>
+
+<h2 id="s6">6. 积分商城与资源下载</h2>
+<h3>6.1 商城</h3>
+<pre><code>moe_pt_on() / moe_pt_shop_on()          // 模块开关
+moe_pt_view_shop($u, $subBase)          // 商城页（含二级页签：商城/充值/兑换/投稿/友链）
+moe_pt_good($id) / moe_pt_goods($where) // 商品读取
+moe_pt_goods_save / goods_delete / goods_status
+moe_pt_goods_sync_from_post($postId, $in)  // ★2.2.23 文章编辑器「上架资源」：按 post_id 增改，封面自动取文章封面
+moe_pt_buy($uid, $gid, $currency)       // 原子扣减购买（防负余额），订单写入 pt_orders
+moe_pt_exchange_run($uid, $dir)         // 积分 ⇄ 金币互兑（比例 setting：points_ex_p2c / points_ex_c2p，0=关闭）</code></pre>
+<h3>6.2 授权码商品</h3>
+<p>商品分类填「<strong>授权码</strong>」即触发特殊购买流程：用户必须填绑定域名（正则校验 + 已签发域名查重）→ <code>moe_pt_buy()</code> 扣款 → <code>moe_auth_code_generate($domain, 0, secret)</code> 签发永久码 → 写入授权档案 → 跳「我的授权码」页并引导下载程序部署。</p>
+<h3>6.3 下载服务</h3>
+<pre><code>moe_pt_download_url($gid)      // 下载入口 URL
+moe_pt_download_target($gid)   // 解析目标：站内文件 / 外链直链 / 网盘页面
+moe_pt_download_serve($gid)    // ★2.2.23：已兑换用户点击即自动下载 ——
+                               //   站内文件强制 attachment 头；
+                               //   外链直链（zip/rar/pdf 等扩展名白名单）走 curl 代理流式输出，
+                               //   HTTP 非 200 或 0 字节自动回退 302 跳转（防把网盘 403 页存成文件）；
+                               //   蓝奏/微云分享页无法代理，保持跳转</code></pre>
+
+<h2 id="s7">7. 授权系统</h2>
+<pre><code>moe_auth_code_generate($domain, $days, $secret)  // 签名格式 MH-&lt;时间戳&gt;-&lt;随机&gt;-&lt;hmac20&gt;
+moe_auth_code_verify($code, $secret)             // 本地 HMAC 校验，不依赖外部回调
+moe_auth_check() / moe_auth_cached()             // 终端站校验（带缓存）
+moe_auth_hub_url() / moe_auth_site_domain()      // 授权站与域名规整
+moe_auth_zip_apply / incremental_apply           // 授权站分发更新包的增量应用
+content/updates/user-auth-codes.json             // 用户自助签发档案
+content/updates/auth-sites.json                  // 主站侧授权站点档案</code></pre>
+<p>主站即授权站兼更新源；程序 / 主题 / 插件分别独立检测。用户中心支持邮箱验证码自助签发（2.2.22 起也可由商城授权码商品自动签发）。</p>
+
+<h2 id="s8">8. 更新系统</h2>
+<h3>8.1 更新源</h3>
+<p>后台仪表盘「⚙ 更新源」保存 <code>settings.update_check_url</code>（保存即强制重查，绕过 10 分钟结果缓存）。</p>
+<pre><code>moe_update_feed_url()        // 读取更新源地址
+moe_update_feed_valid($url)  // SSRF 防护：仅公网 http(s)、禁账号密码、禁内网；不跟随重定向（裸域名 301 会失败，务必填 www 直链）
+moe_update_fetch($url)       // 拉取 JSON，要求包含 version 字段
+moe_update_check()           // 本地版本 vs 源版本（version_compare），结果缓存进 settings.update_check_cache</code></pre>
+<h3>8.2 自动更新源端点 update-feed.php（2.2.23）</h3>
+<p>部署在<strong>分发站根目录</strong>，让站长「丢 zip 即发版」，不再手动维护 version.json：</p>
+<pre><code>优先级：update/feed.json（手动兜底） &gt; update/ 目录里版本号最高的 zip &gt; 站点根 version.json
+
+发版流程：把 moe-home-v2.2.30.zip 上传到 update/ 目录即可（moe-home 为更新源识别关键字，改名会导致发版识别不到）
+可选：update/notes.txt（每行一条更新说明，# 开头为注释）
+
+防误报：文件名含 moe-home 才识别任意数字版本；其余文件必须 v 前缀（backup-2026-11-13.zip 不会误判）
+下载地址自动生成为 zip 绝对直链（配合 6.3 下载代理，用户点击即自动下载）</code></pre>
+<h3>8.3 在线更新执行</h3>
+<pre><code>moe_update_download($url)      // 下载更新包；version.json 的 download 支持蓝奏云/微云分享链接（可带 ?pwd= 或「密码:xxx」提取码，自动解析真实直链）
+moe_update_apply_zip($file)    // 应用更新：排除用户数据文件（config.php/install.lock/content/uploads/cache），校验后覆盖
+moe_update_rollback()          // 备份回滚
+moe_update_workspace()         // 临时工作目录（升级包解压、备份）</code></pre>
+
+<h2 id="s9">9. AI 看板娘（版娘挂载）</h2>
+<h3>9.1 架构</h3>
+<pre><code>浏览器组件（主题挂载）
+   │  POST q（对话内容）+ X-CSRF-Token
+   ▼
+api/chat.php                    # 后端端点（根目录 /chat.php 为兼容桩）
+   │  moe_chat_reply($q, $ctx)  # 总入口
+   ├─ moe_chat_local($raw,$ctx) # 未配置 AI / 闲聊兜底：本地台词库（守夜/早安/笑话/安慰…）
+   └─ moe_chat_ai($q, $ctx)     # AI 分支（includes/chat_ai.php）
+        ├─ moe_chat_system($ctx)      # 系统提示词（人设 ai_persona + 站点信息 + 当前文章摘要）
+        ├─ moe_chat_hist_push/get     # 会话内多轮记忆
+        ├─ moe_chat_mem_add/get       # 跨会话长期记忆（cache 存储）
+        ├─ moe_chat_web($q)           # 联网搜索（moe_ai_search 抓取正文摘要注入上下文）
+        ├─ moe_chat_run_tool($tool)   # 工具调用（读文章、站内搜索等）
+        └─ moe_ai_chat($messages)     # OpenAI 兼容底层（includes/ai.php）</code></pre>
+<h3>9.2 后台配置（settings 键）</h3>
+<table>
+  <tr><th>键</th><th>说明</th></tr>
+  <tr><td>ai_enabled</td><td>总开关（未开启时走本地台词库）</td></tr>
+  <tr><td>ai_base / ai_key / ai_model</td><td>OpenAI 兼容接口地址 / 密钥 / 模型名</td></tr>
+  <tr><td>ai_persona</td><td>人设提示词（台词自称自动跟随后台设置的名字）</td></tr>
+  <tr><td>ai_web</td><td>联网搜索开关</td></tr>
+  <tr><td>ai_daily</td><td>每日请求配额（moe_ai_quota_take 原子扣减）</td></tr>
+  <tr><td>ai_temp / ai_timeout</td><td>采样温度 / 超时</td></tr>
+  <tr><td>ai_price_in / ai_price_out</td><td>千 token 单价（用于 moe_ai_usage_record 花费统计）</td></tr>
+  <tr><td>ai_bot_name</td><td>看板娘名字兜底；优先级 <code>theme_opt('mascot_name')</code> → <code>ai_bot_name</code> → 小星</td></tr>
+</table>
+<p>监控：<code>moe_ai_usage_stats()</code>（后台 AI 监控卡 + 前台小屋同款）、<code>moe_ai_ping()</code> 连通性检测、<code>moe_ai_quota_used()</code> 今日配额。</p>
+<h3>9.3 前台挂载（任意主题三步接入）</h3>
+<p>版娘组件默认由 <code>moez-companion</code> 插件自动挂载（首次访问自动启用，站长停用后不再自动打开，8 套主题通用，CSS/JS/立绘走 <code>?moez_cp_asset=</code> 代理）；自研主题也可按下方协议手动接入——在 footer 里输出一个带 <code>data-*</code> 属性的容器即可：</p>
+<pre><code>&lt;div class="my-companion" id="my-companion"
+     data-api="&lt;?php echo e(base_url() . 'chat.php'); ?&gt;"
+     data-token="&lt;?php echo e(function_exists('csrf_token') ? csrf_token() : ''); ?&gt;"
+     data-name="&lt;?php echo e(function_exists('moe_chat_name') ? moe_chat_name() : '小星'); ?&gt;"
+     data-greet="你好呀～我是本站看板娘，有事随时问我"&gt;
+  &lt;div class="my-cp-panel"&gt;…气泡面板 / 输入框 / 历史列表（样式自定）…&lt;/div&gt;
+  &lt;img class="my-cp-avatar" src="&lt;?php echo e(theme_url('assets/mascot.png')); ?&gt;" alt=""&gt;
+&lt;/div&gt;</code></pre>
+<p>配套 JS（随主题 assets 携带）只做三件事：</p>
+<ol>
+  <li>POST <code>data-api</code>，body 带 <code>q</code>，请求头带 <code>X-CSRF-Token: data-token</code></li>
+  <li>渲染返回 JSON：<code>{ reply, actions?, chips? }</code>（chips 为 <code>moe_chat_chips()</code> 推荐话题按钮）</li>
+  <li>「重新开始」按钮调 <code>moe_chat_hist_clear()</code> 对应的清空动作（或刷新会话）</li>
+</ol>
+<div class="tip">不想自己写 JS 的主题启用插件即可。配置优先级：后台调试台 <code>moez_cp_*</code> → 当前主题 <code>themeopt_{主题}_*</code> → 内置默认（<code>mascot_name</code> 名字、<code>mascot_side</code> 左右、<code>voice_*</code> TTS 音色语调）。fomalhaut 自带挂载块会自动让出（<code>function_exists</code> 判断），不会同页出现两套版娘。</div>
+<h3>9.4 后端响应协议</h3>
+<pre><code>// api/chat.php 响应（application/json）
+{ "reply": "回复正文",            // 必有
+  "actions": [ ... ],             // 可选：moe_chat_parse_actions() 解析出的动作（如打开链接）
+  "chips":  ["今天写点什么？", ...] // 可选：推荐追问
+}
+// ctx 上下文：传当前文章 ID 时自动注入标题与 moe_chat_post_summary() 摘要（约 700 字）</code></pre>
+
+<h2 id="s10">10. 插件开发</h2>
+<pre><code>moe_plugin_register($hook, $cb)   // 注册钩子
+moe_plugin_render($hook, ...$args) // 渲染型钩子输出
+moe_plugin_apply($hook, $value)    // 过滤型钩子</code></pre>
+<p>可用钩子：<code>front_head</code>、<code>front_footer</code>、<code>admin_menu</code>、<code>admin_dashboard</code>、<code>admin_footer</code>。插件目录放 <code>content/plugins/&lt;ID&gt;/</code>，<code>plugin.php</code> 为入口；上传 zip 支持中文目录名与 GBK 文件名自动转码（2.2.23），插件 ID 校验 <code>moe_plugin_id_valid()</code> 放开中文。</p>
+<pre><code>&lt;?php
+/* content/plugins/hello/plugin.php */
+moe_plugin_register('front_footer', function () {
+    echo '&lt;p style="text-align:center"&gt;由 Hello 插件渲染&lt;/p&gt;';
+});</code></pre>
+
+<h2 id="s11">11. 模板开发</h2>
+<h3>11.1 结构与配置项</h3>
+<pre><code>templates/&lt;dir&gt;/
+├─ info.php        模板信息 + 可配置项声明（后台「模板设置」读取）
+├─ header.php / footer.php
+├─ index.php / post.php / page.php / category.php / search.php ...
+├─ 404.php / maintenance.php
+├─ screenshot.png  后台模板卡片缩略图（可选）
+└─ assets/         模板自有 CSS / JS / 图片</code></pre>
+<pre><code>theme_opt('key', 'default')   // 读 info.php 声明的配置项
+theme_path($file) / theme_url($file)
+partial_path($name)           // 引入子部件
+// info.php 可声明 mascot_name（看板娘名字）、mascot_side 等，供版娘与用户中心读取</code></pre>
+<h3>11.2 在线安装与更新</h3>
+<p>后台「主题」页上传 zip 安装（2.2.20 起支持，2.2.23 起支持中文目录名 / GBK 转码，目录名自动取 zip 内主题名，遗留 stage 临时目录上传时自动清理）；模板切换校验已放开中文目录。</p>
+
+<h2 id="s12">12. 后台页面开发</h2>
+<pre><code>&lt;?php
+require __DIR__ . '/bootstrap.php';   // 所有后台页面（login.php 除外）第一行
+$active = 'posts';                     // 对应 header.php 菜单 key
+$page_title = '我的页面';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_verify();                     // POST 必过 CSRF
+    // ... 写操作
+    flash('已保存');
+    redirect('my-page.php');
+}
+include __DIR__ . '/includes/header.php';
+?&gt;
+&lt;div class="card"&gt;
+  &lt;h2 class="card-title"&gt;标题&lt;/h2&gt;
+  &lt;form method="post"&gt;&lt;?php echo csrf_field(); ?&gt; ... &lt;/form&gt;
+&lt;/div&gt;
+&lt;?php include __DIR__ . '/includes/footer.php'; ?&gt;</code></pre>
+<p>样式统一走 <code>admin/assets/admin.css</code>（引用带 <code>?v=</code> 版本号）；胶囊页签、卡片、pill 状态标签均为现成类。编辑器相关：后台发文与用户中心投稿共用 <code>moe_editor_mode()</code> 决定的编辑器；UEditor 模式上传走 <code>admin/ueditor-server.php</code>（<code>serverUrl</code> 需拼接 <code>?_token=CSRF</code>，提交前 <code>ed.sync()</code>）。</p>
+
+<h2 id="s13">13. 安全规范</h2>
+<ul>
+  <li><strong>CSRF</strong>：<code>csrf_token()</code> / <code>csrf_field()</code>（POST <code>_token</code>）/ <code>csrf_verify()</code> / <code>csrf_ajax()</code>（header <code>X-CSRF-Token</code>）——所有写操作必须过验证</li>
+  <li><strong>上传</strong>：统一上传服务（includes/upload.php，2.2.30 工程）——扩展名白名单 + <code>getimagesize</code> 图片校验 + <code>fileinfo</code> 真实 MIME 校验（扩展缺失自动降级）+ 大小受 <code>upload_max_mb</code>；按 image/video/audio/file 月度分目录；文件名净化并保留原文件名主干（重名追加 6 位随机尾缀）</li>
+  <li><strong>SSRF</strong>：<code>moe_update_feed_valid()</code> 只放行公网 http(s)，拉取不跟随重定向</li>
+  <li><strong>投稿隔离</strong>：<code>pending</code> 状态绝不经 <code>render_content</code> 输出到前台（未审核 HTML 不过滤）</li>
+  <li><strong>支付</strong>：充值回调验签，人工通道二次确认；<code>pt_orders</code> 状态机防重复入账</li>
+  <li><strong>授权</strong>：HMAC 签名本地校验，密钥仅存授权站；终端站不可伪造</li>
+</ul>
+
+<h2 id="s14">14. 附录</h2>
+<h3>14.1 钩子速查</h3>
+<p><code>front_head</code> · <code>front_footer</code> · <code>admin_menu</code> · <code>admin_dashboard</code> · <code>admin_footer</code> —— 注册 <code>moe_plugin_register()</code>，输出 <code>moe_plugin_render()</code>，过滤 <code>moe_plugin_apply()</code>。</p>
+<h3>14.2 版本历史（摘要）</h3>
+<table>
+  <tr><th>版本</th><th>内容</th></tr>
+  <tr><td>1.8.x – 1.9.0</td><td>标签/附件/评论归属地/自动保存/SEO 推送；页面缓存、Redis、消除 N+1</td></tr>
+  <tr><td>2.0.0 – 2.0.4</td><td>用户中心/三角色/胶囊页签/插件系统/在线更新与备份回滚/资源媒体库</td></tr>
+  <tr><td>2.1.x</td><td>积分商城/签到/点赞/附件强化</td></tr>
+  <tr><td>2.2.0 – 2.2.13</td><td>授权系统、金币充值、双货币互兑、AI 看板娘（联网/记忆/配额监控）、文件分类整理 api/pay/tools</td></tr>
+  <tr><td>2.2.20 – 2.2.21</td><td>主题 zip 在线安装；仪表盘更新源设置入口；version.json 支持网盘下载链接</td></tr>
+  <tr><td>2.2.22</td><td>UEditorPlus 编辑器切换；用户中心二级导航；投稿系统（审核+邮件）；友链申请；主题配色自适应；授权码商品自动签发</td></tr>
+  <tr><td>2.2.23</td><td>主题/插件 zip 中文与 GBK 修复；分栏预览恢复；文章编辑器「上架资源」卡片；已兑换资源自动下载；update-feed.php 自动更新源端点</td></tr>
+  <tr><td>2.2.24</td><td>版娘移动端语音修复（iOS 手势同步启动、跳过有害的 pause-resume 保活、预热句改真实汉字小音量）</td></tr>
+  <tr><td>2.2.25</td><td>在线更新「文件不可写」修复：覆盖写入前先 chmod 自修复再判定</td></tr>
+  <tr><td>2.2.26</td><td>后台「🎟 授权发放」卡移除，授权签发 / 管理统一在用户中心「🔑 我的授权码」</td></tr>
+  <tr><td>2.2.27</td><td>缓存策略调整：数据缓存只走 Redis，失败不落文件兜底、直接查库并如实提示</td></tr>
+  <tr><td>2.2.28</td><td>修复「保存设置后误报 Redis 连接失败」第一阶段：配置缓存改存 $GLOBALS、失败强制重试</td></tr>
+  <tr><td><strong>2.2.29（当前）</strong></td><td>修复误报第二阶段：moe_cache_client / moe_cache_status 支持强制重置连接，保存后用新配置实测</td></tr>
+  <tr><td>2.2.30（工程层，不动版本号）</td><td>统一上传服务、主题路径适配层、config.sample.php、nginx / Caddy / Docker 部署配置、auto_install.json、SECURITY.md、目录工程化整理 —— 业务功能与数据结构不变</td></tr>
+</table>
+<h3>14.3 发版清单（Checklist）</h3>
+<ol>
+  <li><code>init.php</code> 更新 <code>MOE_VERSION</code>；<code>version.json</code> 同步版本与说明</li>
+  <li>打包排除 <code>config.php / install.lock / .user.ini / cache / content / tests / update</code> 内的 zip 与用户上传</li>
+  <li>新包丢进分发站 <code>update/</code> 目录（update-feed.php 自动广播）</li>
+  <li>仪表盘「⚙ 更新源」重存一次强制刷新检测结果</li>
+  <li>核心函数 / 表结构 / 钩子有变动时，同步更新本文档</li>
+</ol>
+<p style="margin-top:30px;color:var(--muted);font-size:12.5px">文档随源码同步维护 · MoeZ v2.2.29 · 2026-11-18</p>
+</main>
+
+<script>
+var inp=document.getElementById('tocSearch');
+document.addEventListener('keydown',function(e){if(e.key==='/'&&document.activeElement!==inp){e.preventDefault();inp.focus();}});
+inp.addEventListener('input',function(){
+  var q=this.value.trim().toLowerCase();
+  document.querySelectorAll('#toc a').forEach(function(a){
+    a.classList.toggle('none', q!=='' && a.textContent.toLowerCase().indexOf(q)===-1);
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+# MoeZ · Caddy v2 配置
+# 参照 emlog Pro 2.6.36 的 Caddyfile / frankenphp 写法补齐。
+# 用法：把本文件放到 /etc/caddy/Caddyfile，按实际改域名、root 与 php_fastcgi 地址，
+#       然后 caddy validate && caddy reload。
+
+moezzz.com, www.moezzz.com {
+    root * /www/wwwroot/moezzz.com
+
+    encode zstd gzip
+
+    # 敏感文件与内部目录
+    @denied path /config.php /config.sample.php /install.lock /.htaccess /.user.ini /docker-compose.yml /auto_install.json /nginx.conf /Caddyfile /_ping_tmp.php /diag.php /selfcheck.php /tools/* /cache/* /includes/* /tests/* /docs/* /content/backups/* /content/archive/* /content/updates/* /content/recharge/*
+    respond @denied 403
+
+    # 上传目录禁止执行脚本（等价于 uploads/.htaccess）
+    @uploadscript path_regexp ^/uploads/.*\.(php|php3|php4|php5|php7|phtml|cgi|pl|py|sh)$
+    respond @uploadscript 403
+
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "geolocation=(), camera=(), microphone=()"
+    }
+
+    # 伪静态：与 .htaccess 保持一致
+    try_files {path} {path}/ /index.php?{query}
+
+    php_fastcgi 127.0.0.1:9000
+    file_server
+}

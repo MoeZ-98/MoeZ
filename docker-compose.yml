@@ -1,0 +1,56 @@
+# MoeZ · 可选容器部署
+# 参照 emlog Pro 2.6.36 的 docker-compose.yml 补齐，仅用于本地开发 / 自建服务器。
+# 线上若是宝塔、虚拟主机，直接用 nginx.conf 或 .htaccess 即可，无需本文件。
+#
+# 启动：
+#   cp config.sample.php config.php   # 首次安装可跳过，浏览器访问后由 install.php 生成
+#   docker compose up -d
+#   浏览器打开 http://localhost:8080 走安装器
+#
+# 注意：db 的账号密码请自行修改，不要使用示例值上生产。
+
+services:
+  db:
+    image: mysql:8.0
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: change_me_root
+      MYSQL_DATABASE: moezzz
+      MYSQL_USER: moezzz
+      MYSQL_PASSWORD: change_me
+    volumes:
+      - ./_docker/db:/var/lib/mysql
+    networks: [moe_net]
+    restart: unless-stopped
+
+  php:
+    image: php:8.2-fpm-alpine
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM php:8.2-fpm-alpine
+        RUN apk add --no-cache freetype-dev libjpeg-turbo-dev libpng-dev libzip-dev \
+            && docker-php-ext-configure gd --with-freetype --with-jpeg \
+            && docker-php-ext-install -j$$(nproc) gd zip pdo_mysql
+    volumes:
+      - ./:/app
+    working_dir: /app
+    environment:
+      TZ: Asia/Shanghai
+    depends_on: [db]
+    networks: [moe_net]
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/app
+      - ./docs/nginx-docker.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [php]
+    networks: [moe_net]
+    restart: unless-stopped
+
+networks:
+  moe_net:
